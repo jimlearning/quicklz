@@ -1,4 +1,4 @@
-# Kivy iOS 通过 Python 调用 C 语言库 Quicklz 流程总结
+# Kivy iOS Python 调用 C 语言库 Quicklz 总结
 
 ## 预期目标
 
@@ -64,10 +64,12 @@ $ toolchain build kivy
     └── xcframework
 ```
 
+> 请谨慎选择当前路径，后期不要随意更改，因为编译结果中，很多地方使用的是绝对路径。
+
 ### 接着使用内置工具新建 iOS 工程
 
 ```shell
-$ toolchain create kivy-quicklz ~/Downloads/kivy-build-output
+$ toolchain create kivy-quicklz ~/Projects/kivy-build-output
 ```
 
 我的工程新建在 ~/Projects 目录下，工程名字为 kivy-quicklz，脚本会自动新建目录 kivy-quicklz-ios，并把工程放在该目录下。
@@ -78,6 +80,8 @@ $ toolchain create kivy-quicklz ~/Downloads/kivy-build-output
 [ERROR   ] You must have compiled at least python3
 [ERROR   ] recipe to be able to create a project.
 ```
+
+> 此处工程命名也请谨慎，后期不要随意更改，因为工程配置中，也有很多地方使用的是绝对路径。
 
 ### 打开工程
 
@@ -103,8 +107,8 @@ $ toolchain create kivy-quicklz ~/Downloads/kivy-build-output
 # 1. 先将整个 kivy-quicklz-ios 目录（包含 YourApp 子目录）同步到 YourApp 目录；
 # 2. 再将嵌套的 YourApp 目录内容移动到正确位置；
 # 3. 最后删除多余的 YourApp 目录。
-# 4. "/Users/jim/Projects/kivy-ios/kivy-quicklz-ios/" 不能改为 "$PROJECT_DIR"，不然会有问题，替换为自己的工程所在位置。
-rsync -av --delete "/Users/jim/Projects/kivy-ios/kivy-quicklz-ios/" "$PROJECT_DIR"/YourApp
+# 4. "/Users/jim/Projects/kivy-ios-output/kivy-quicklz-ios/" 不能改为 "$PROJECT_DIR"，不然会有问题，替换为自己的工程所在位置。
+rsync -av --delete "/Users/jim/Projects/kivy-ios-output/kivy-quicklz-ios/" "$PROJECT_DIR"/YourApp
 mv "$PROJECT_DIR"/YourApp/YourApp/* "$PROJECT_DIR"/YourApp
 rm -rf "$PROJECT_DIR"/YourApp/YourApp
 ```
@@ -117,7 +121,7 @@ Unable to open main.py, abort.
 Leaving
 ```
 
-- 接下来就可以写 `main.py` 了。在 iOS 工程根目录下，即 `~/Downloads/kivy-build-output/kivy-quicklz-ios/`，新建 `main.py`，粘贴如下测试代码：
+- 接下来就可以写 `main.py` 了。在 iOS 工程根目录下，即 `~/Projects/kivy-build-output/kivy-quicklz-ios/`，新建 `main.py`，粘贴如下测试代码：
 
 ```python
 import kivy
@@ -257,9 +261,9 @@ security find-identity -p codesigning -v
 > 因为我们所有的实现文件和生成的动态库都位于 `dist` 下的 `lib` 目录下，kivy iOS 工程创建时已经做了相应的路径配置，所以不用做任何配置，免去了很多麻烦。可以参看 `Build Setting` 目录下的 `Search Paths` 配置：
 
 ```shell
-FRAMEWORK_SEARCH_PATHS = /Users/jim/Downloads/kivy-build-output/dist/frameworks $(SRCROOT)/../dist/xcframework $(inherited)
-HEADER_SEARCH_PATHS = /Users/jim/Downloads/kivy-build-output/dist/root/python3/include/python3.11/** /Users/jim/Downloads/kivy-build-output/dist/include/common/sdl2
-LIBRARY_SEARCH_PATHS = $(inherited) /Users/jim/Downloads/kivy-build-output/dist/lib
+FRAMEWORK_SEARCH_PATHS = /Users/jim/Projects/kivy-build-output/dist/frameworks $(SRCROOT)/../dist/xcframework $(inherited)
+HEADER_SEARCH_PATHS = /Users/jim/Projects/kivy-build-output/dist/root/python3/include/python3.11/** /Users/jim/Projects/kivy-build-output/dist/include/common/sdl2
+LIBRARY_SEARCH_PATHS = $(inherited) /Users/jim/Projects/kivy-build-output/dist/lib
 ```
 
 #### 新建 quicklz.py
@@ -328,6 +332,10 @@ QLZ_SCRATCH_DECOMPRESS = 4096  # 修改为实际值
 ```python
 from .quicklz import compress, decompress
 ```
+
+#### 快捷方式
+
+下载 https://github.com/jimlearning/quicklz 源码，然后放在 `/Users/jim/Projects/kivy-build-output/dist/root/python3/lib/python3.11/site-packages/quicklz/` 路径下即可。
 
 ### 运行
 
