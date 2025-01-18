@@ -266,43 +266,23 @@ HEADER_SEARCH_PATHS = /Users/jim/Projects/kivy-build-output/dist/root/python3/in
 LIBRARY_SEARCH_PATHS = $(inherited) /Users/jim/Projects/kivy-build-output/dist/lib
 ```
 
-#### 新建 quicklz.py
+#### 新建 __init__.py
 
-现在有了动态库，需要我们手动加载，否则即使能够 import 成功，也无法使用其中的功能。
+现在有了动态库，需要我们手动加载此动态库，并对外开放 python 接口，否则即使能够 import 成功，也无法使用其中的功能。
 
 ```python
-# quicklz.py
+# __init__.py
 
 import ctypes
 import os
 import platform
 
-# 获取脚本文件所在的目录
-script_dir = os.path.dirname(os.path.abspath(__file__))
+# 定义全局变量
+quicklz_lib = None
 
-# 检测当前平台环境
-def detect_platform():
-    if "simulator" in platform.machine().lower():
-        return "iphonesimulator"
-    else:
-        return "iphoneos"
-    
-# 获取当前 Platform，iphoneos / iphonesimulator
-platform_env = detect_platform()
-
-# 构建动态库的绝对路径
-lib_path = os.path.abspath(os.path.join(script_dir, f"./{platform_env}-arm64/quicklz-1.0/libquicklz.dylib"))
-print("Library path:", lib_path)
-
-# 构建动态库
-quicklz_lib = ctypes.CDLL(lib_path)
-
-# 定义 QuickLZ 函数签名
-quicklz_lib.qlz_compress.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p]
-quicklz_lib.qlz_compress.restype = ctypes.c_size_t
-
-quicklz_lib.qlz_decompress.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_char_p]
-quicklz_lib.qlz_decompress.restype = ctypes.c_size_t
+# 定义常量
+QLZ_SCRATCH_COMPRESS = 4096  # 修改为实际值
+QLZ_SCRATCH_DECOMPRESS = 4096  # 修改为实际值
 
 # Python 封装函数
 def compress(data: bytes) -> bytes:
@@ -319,18 +299,34 @@ def decompress(data: bytes) -> bytes:
     size = quicklz_lib.qlz_decompress(source, dest, scratch)
     return dest.raw[:size]
 
-# 定义常量
-QLZ_SCRATCH_COMPRESS = 4096  # 修改为实际值
-QLZ_SCRATCH_DECOMPRESS = 4096  # 修改为实际值
+def main():
+    global quicklz_lib  # 声明 quicklz_lib 为全局变量
 
-```
+    # 获取脚本文件所在的目录
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-#### 新建文件 __init__.py
+    # 获取当前 Platform，iphoneos / iphonesimulator
+    if "simulator" in platform.machine().lower():
+        platform_env = "iphonesimulator"
+    else:
+        platform_env = "iphoneos"
 
-然后新建文件 __init__.py，只需要一行代码，用于引用 quicklz.py 文件及对外声明可用的方法。
+    # 构建动态库的绝对路径
+    lib_path = os.path.abspath(os.path.join(script_dir, f"./{platform_env}-arm64/quicklz-1.0/libquicklz.dylib"))
+    print("Library path:", lib_path)
 
-```python
-from .quicklz import compress, decompress
+    # 构建动态库
+    quicklz_lib = ctypes.CDLL(lib_path)
+
+    # 定义 QuickLZ 函数签名
+    quicklz_lib.qlz_compress.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p]
+    quicklz_lib.qlz_compress.restype = ctypes.c_size_t
+
+    quicklz_lib.qlz_decompress.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_char_p]
+    quicklz_lib.qlz_decompress.restype = ctypes.c_size_t
+
+main()
+
 ```
 
 #### 快捷方式
