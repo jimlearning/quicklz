@@ -23,6 +23,13 @@ def decompress(data: bytes) -> bytes:
     scratch = ctypes.create_string_buffer(QLZ_SCRATCH_DECOMPRESS)  # 根据 QLZ_SCRATCH_DECOMPRESS 定义
     size = quicklz_lib.qlz_decompress(source, dest, scratch)
     return dest.raw[:size]
+    
+def is_simulator():
+    # 检查架构
+    machine = platform.machine()
+    if machine.startswith("x86_64") or (machine.startswith("arm64") and "SIMULATOR_DEVICE_NAME" in os.environ):
+        return True
+    return False
 
 def main():
     global quicklz_lib  # 声明 quicklz_lib 为全局变量
@@ -31,7 +38,7 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # 获取当前 Platform，iphoneos / iphonesimulator
-    if "simulator" in platform.machine().lower():
+    if is_simulator():
         platform_env = "iphonesimulator"
     else:
         platform_env = "iphoneos"
