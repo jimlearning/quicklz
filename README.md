@@ -1,4 +1,6 @@
-# Kivy iOS Python 调用 C 语言库 Quicklz 总结
+# Kivy iOS Python 调用 C 语言库 Quicklz 总结 - 动态库方案
+
+> 静态库方案：https://github.com/jimlearning/pyquicklz
 
 ## 预期目标
 
